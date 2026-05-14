@@ -349,7 +349,7 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
 
   return (
     <div className="app-shell">
-      <Header isDashboard={isDashboardMode} view={view} navigate={navigate} />
+      <Header />
       {notice ? <div className="toast" style={{ maxWidth: 1220, margin: "0 auto 18px" }}>{notice}</div> : null}
 
       {!isDashboardMode && view === "home" ? <Home activeCode={activeCode} setActiveCode={setActiveCode} onSubmit={handleCodeSubmit} /> : null}
@@ -406,7 +406,7 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
   );
 }
 
-function Header({ isDashboard }) {
+function Header() {
   return (
     <header className="topbar">
       <a className="brand" href="/" aria-label="الرئيسية">
@@ -416,11 +416,7 @@ function Header({ isDashboard }) {
           <p>رياضيات أونلاين بنظام عربي كامل</p>
         </span>
       </a>
-      {isDashboard ? (
-        <nav className="nav">
-          <a className="btn secondary" href="/">دخول الطالب</a>
-        </nav>
-      ) : null}
+      {null}
     </header>
   );
 }
@@ -636,7 +632,7 @@ function DashboardShell({ children, navigate }) {
   );
 }
 
-function Dashboard({ state, resetDemo }) {
+function Dashboard({ state }) {
   const activeExams = state.exams.filter((exam) => exam.status === "active").length;
   const graded = state.submissions.filter((submission) => submission.status === "graded");
   const avg = graded.length ? Math.round(graded.reduce((sum, submission) => sum + submission.totalScore, 0) / graded.length) : 0;
@@ -645,7 +641,6 @@ function Dashboard({ state, resetDemo }) {
     <section className="panel">
       <div className="section-title">
         <h2>إحصائيات عامة</h2>
-        <button className="btn secondary" onClick={resetDemo} type="button">استعادة الديمو</button>
       </div>
       <div className="stats">
         <div className="card stat"><span className="muted">كل الامتحانات</span><strong>{state.exams.length}</strong></div>
