@@ -150,10 +150,17 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
   }
 
   function updateAnswer(questionId, answer) {
-    setAnswers((current) => ({
-      ...current,
-      [questionId]: { answer }
-    }));
+    if (answer && typeof answer === "object" && "text" in answer) {
+      setAnswers((current) => ({
+        ...current,
+        [questionId]: { answer: answer.text, imageData: answer.imageData }
+      }));
+    } else {
+      setAnswers((current) => ({
+        ...current,
+        [questionId]: { answer }
+      }));
+    }
   }
 
   function submitExam(auto = false) {
@@ -166,6 +173,7 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
       const current = answers[question.id]?.answer;
       normalizedAnswers[question.id] = {
         answer: current ?? "",
+        imageData: answers[question.id]?.imageData || "",
         answerLabel: question.type === "mcq" ? question.options?.[current] : undefined,
         correctLabel: question.type === "mcq" ? question.options?.[question.correctAnswer] : undefined,
         isCorrect: question.type === "mcq" ? current === question.correctAnswer : null
@@ -556,11 +564,10 @@ function StartExam({ activeQuestion, answers, currentIndex, examSession, onAnswe
             ))}
           </div>
         ) : (
-          <textarea
-            className="textarea"
-            onChange={(event) => onAnswer(activeQuestion.id, event.target.value)}
-            placeholder="اكتب إجابتك هنا"
-            value={answers[activeQuestion.id]?.answer || ""}
+          <EssayAnswer
+            answer={answers[activeQuestion.id]}
+            questionId={activeQuestion.id}
+            onAnswer={onAnswer}
           />
         )}
         <div className="split" style={{ marginTop: 18 }}>
@@ -582,7 +589,7 @@ function StartExam({ activeQuestion, answers, currentIndex, examSession, onAnswe
         <div className="question-nav">
           {examSession.questions.map((question, index) => (
             <button
-              className={`nav-dot ${answers[question.id]?.answer !== undefined && answers[question.id]?.answer !== "" ? "answered" : ""} ${index === currentIndex ? "active" : ""}`}
+              className={`nav-dot ${(answers[question.id]?.answer !== undefined && answers[question.id]?.answer !== "") || answers[question.id]?.imageData ? "answered" : ""} ${index === currentIndex ? "active" : ""}`}
               key={question.id}
               onClick={() => onMove(index)}
               type="button"
@@ -593,6 +600,60 @@ function StartExam({ activeQuestion, answers, currentIndex, examSession, onAnswe
         </div>
       </aside>
     </main>
+  );
+}
+
+function EssayAnswer({ answer, questionId, onAnswer }) {
+  function handleImage(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      onAnswer(questionId, { text: answer?.answer || "", imageData: reader.result });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleText(value) {
+    onAnswer(questionId, { text: value, imageData: answer?.imageData || "" });
+  }
+
+  return (
+    <div className="stack" style={{ marginTop: 8 }}>
+      <textarea
+        className="textarea"
+        onChange={(event) => handleText(event.target.value)}
+        placeholder="اكتب إجابتك هنا (اختياري)"
+        value={answer?.answer?.text ?? answer?.answer ?? ""}
+      />
+      <div className="essay-upload">
+        <label className="essay-upload-label">
+          ارفع صورة الإجابة (اختياري)
+          <input
+            accept="image/*"
+            style={{ display: "none" }}
+            type="file"
+            onChange={(event) => handleImage(event.target.files?.[0])}
+          />
+        </label>
+        {(answer?.imageData || answer?.answer?.imageData) ? (
+          <div style={{ marginTop: 10 }}>
+            <img
+              src={answer?.imageData || answer?.answer?.imageData}
+              alt="صورة الإجابة"
+              style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid var(--border)" }}
+            />
+            <button
+              className="btn danger"
+              style={{ marginTop: 8 }}
+              type="button"
+              onClick={() => onAnswer(questionId, { text: answer?.answer?.text ?? answer?.answer ?? "", imageData: "" })}
+            >
+              حذف الصورة
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -881,7 +942,13 @@ function AnswerReview({ state, submission }) {
               <p>{question.text || "سؤال بصورة فقط"}</p>
               {question.imageData ? <figure className="question-image"><img src={question.imageData} alt="صورة السؤال" /></figure> : null}
               {question.imageText ? <div className="equation-card">{question.imageText}</div> : null}
-              <div className="answer-line"><span>إجابة الطالب</span><strong>{answer?.answerLabel || answer?.answer || "لم يجب"}</strong></div>
+              <div className="answer-line">
+                <span>إجابة الطالب</span>
+                <strong>{answer?.answerLabel || answer?.answer || (answer?.imageData ? "" : "لم يجب")}</strong>
+                {answer?.imageData ? (
+                  <img src={answer.imageData} alt="إجابة الطالب" style={{ maxWidth: "100%", borderRadius: 8, marginTop: 6, border: "1px solid #dbe2ef" }} />
+                ) : null}
+              </div>
               <div className="answer-line"><span>الإجابة الصحيحة</span><strong>{answer?.correctLabel || (question.type === "mcq" ? question.options?.[question.correctAnswer] : "تصحيح يدوي")}</strong></div>
             </article>
           );
