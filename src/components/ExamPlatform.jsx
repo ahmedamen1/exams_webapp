@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { answeredCount, gradeMCQ, prepareExam } from "@/lib/examUtils";
 import { createId } from "@/lib/mockData";
 import { exportSubmissionsCsv } from "@/lib/exportUtils";
@@ -346,17 +345,19 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
     flash("تمت استعادة البيانات التجريبية.");
   }
 
+  const isDashboardMode = ["dashboard", "exams", "newExam", "results"].includes(initialView);
+
   return (
     <div className="app-shell">
-      <Header view={view} navigate={navigate} />
+      <Header isDashboard={isDashboardMode} view={view} navigate={navigate} />
       {notice ? <div className="toast" style={{ maxWidth: 1220, margin: "0 auto 18px" }}>{notice}</div> : null}
 
-      {view === "home" ? <Home activeCode={activeCode} setActiveCode={setActiveCode} onSubmit={handleCodeSubmit} /> : null}
-      {view === "login" ? <Login navigate={navigate} /> : null}
-      {view === "student" ? (
+      {!isDashboardMode && view === "home" ? <Home activeCode={activeCode} setActiveCode={setActiveCode} onSubmit={handleCodeSubmit} /> : null}
+      {!isDashboardMode && view === "login" ? <Login navigate={navigate} /> : null}
+      {!isDashboardMode && view === "student" ? (
         <StudentEntry exam={activeExam} student={student} setStudent={setStudent} onStart={() => beginExam()} />
       ) : null}
-      {view === "start" ? (
+      {!isDashboardMode && view === "start" ? (
         <StartExam
           activeQuestion={activeQuestion}
           answers={answers}
@@ -368,9 +369,9 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
           remainingSeconds={remainingSeconds}
         />
       ) : null}
-      {view === "result" ? <Result examSession={examSession} state={state} activeCode={activeCode} /> : null}
+      {!isDashboardMode && view === "result" ? <Result examSession={examSession} state={state} activeCode={activeCode} /> : null}
 
-      {["dashboard", "exams", "newExam", "results"].includes(view) ? (
+      {isDashboardMode ? (
         <DashboardShell navigate={navigate}>
           {view === "dashboard" ? <Dashboard state={state} resetDemo={resetDemo} /> : null}
           {view === "exams" ? (
@@ -405,10 +406,7 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
   );
 }
 
-function Header({ view, navigate }) {
-  const pathname = usePathname();
-  const isDashboard = pathname?.startsWith("/dashboard");
-
+function Header({ isDashboard }) {
   return (
     <header className="topbar">
       <a className="brand" href="/" aria-label="الرئيسية">
