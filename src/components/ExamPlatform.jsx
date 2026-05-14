@@ -416,13 +416,11 @@ function Header({ isDashboard }) {
           <p>رياضيات أونلاين بنظام عربي كامل</p>
         </span>
       </a>
-      <nav className="nav">
-        {isDashboard ? (
+      {isDashboard ? (
+        <nav className="nav">
           <a className="btn secondary" href="/">دخول الطالب</a>
-        ) : (
-          <a className="btn gold" href="/dashboard">لوحة المدرس</a>
-        )}
-      </nav>
+        </nav>
+      ) : null}
     </header>
   );
 }
