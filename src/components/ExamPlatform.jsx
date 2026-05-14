@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { answeredCount, gradeMCQ, prepareExam } from "@/lib/examUtils";
 import { createId } from "@/lib/mockData";
 import { exportSubmissionsCsv } from "@/lib/exportUtils";
@@ -405,22 +406,24 @@ export default function ExamPlatform({ initialView = "home", classCode = "" }) {
 }
 
 function Header({ view, navigate }) {
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
+
   return (
     <header className="topbar">
-      <button className="brand" onClick={() => navigate("home")} type="button" aria-label="الرئيسية">
+      <a className="brand" href="/" aria-label="الرئيسية">
         <img src="/logo.png" alt="يلا نفهم Math" />
         <span>
           <h1>منصة امتحانات أ/ أحمد سرور</h1>
           <p>رياضيات أونلاين بنظام عربي كامل</p>
         </span>
-      </button>
+      </a>
       <nav className="nav">
-        <button className={`btn ${view === "home" ? "gold" : "secondary"}`} onClick={() => navigate("home")} type="button">
-          دخول الطالب
-        </button>
-        <button className={`btn ${view === "dashboard" ? "gold" : "secondary"}`} onClick={() => navigate("dashboard")} type="button">
-          لوحة المدرس
-        </button>
+        {isDashboard ? (
+          <a className="btn secondary" href="/">دخول الطالب</a>
+        ) : (
+          <a className="btn gold" href="/dashboard">لوحة المدرس</a>
+        )}
       </nav>
     </header>
   );
